@@ -8,12 +8,12 @@ from os.path import exists, basename, isdir
 import pyexiv2
 
 def validate_directory(dir):
-    
+
     if not exists(dir):
-        logging.error("Path doesn't exist: {}".format(dir))
+        logging.error(f"Path doesn't exist: {dir}")
         exit(1)
     if not isdir(dir):
-        logging.error("Path is not a directory: {}".format(dir))
+        logging.error(f"Path is not a directory: {dir}")
         exit(1)
 
 def validate_media(photo_path, video_path):
@@ -25,16 +25,16 @@ def validate_media(photo_path, video_path):
     :return: True if photo and video files are valid, else False
     """
     if not exists(photo_path):
-        logging.error("Photo does not exist: {}".format(photo_path))
+        logging.error(f"Photo does not exist: {photo_path}")
         return False
     if not exists(video_path):
-        logging.error("Video does not exist: {}".format(video_path))
+        logging.error(f"Video does not exist: {video_path}")
         return False
     if not photo_path.lower().endswith(('.jpg', '.jpeg')):
-        logging.error("Photo isn't a JPEG: {}".format(photo_path))
+        logging.error(f"Photo isn't a JPEG: {photo_path}")
         return False
     if not video_path.lower().endswith(('.mov', '.mp4')):
-        logging.error("Video isn't a MOV or MP4: {}".format(photo_path))
+        logging.error(f"Video isn't a MOV or MP4: {photo_path}")
         return False
     return True
 
@@ -45,8 +45,8 @@ def merge_files(photo_path, video_path, output_path):
     :param video_path: Path to the video
     :return: File name of the merged output file
     """
-    logging.info("Merging {} and {}.".format(photo_path, video_path))
-    out_path = os.path.join(output_path, "{}".format(basename(photo_path)))
+    logging.info(f"Merging {photo_path} and {video_path}.")
+    out_path = os.path.join(output_path, f"{basename(photo_path)}")
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     with open(out_path, "wb") as outfile, open(photo_path, "rb") as photo, open(video_path, "rb") as video:
         outfile.write(photo.read())
@@ -64,7 +64,7 @@ def add_xmp_metadata(merged_file, offset):
     metadata = pyexiv2.ImageMetadata(merged_file)
     logging.info("Reading existing metadata from file.")
     metadata.read()
-    logging.info("Found XMP keys: " + str(metadata.xmp_keys))
+    logging.info("Found XMP keys: {metadata.xmp_keys}")
     if len(metadata.xmp_keys) > 0:
         logging.warning("Found existing XMP keys. They *may* be affected after this process.")
 
@@ -73,7 +73,7 @@ def add_xmp_metadata(merged_file, offset):
     try:
         pyexiv2.xmp.register_namespace('http://ns.google.com/photos/1.0/camera/', 'GCamera')
     except KeyError:
-        logging.warning("exiv2 detected that the GCamera namespace already exists.".format(merged_file))
+        logging.warning("exiv2 detected that the GCamera namespace already exists.")
     metadata['Xmp.GCamera.MicroVideo'] = pyexiv2.XmpTag('Xmp.GCamera.MicroVideo', 1)
     metadata['Xmp.GCamera.MicroVideoVersion'] = pyexiv2.XmpTag('Xmp.GCamera.MicroVideoVersion', 1)
     metadata['Xmp.GCamera.MicroVideoOffset'] = pyexiv2.XmpTag('Xmp.GCamera.MicroVideoOffset', offset)
@@ -101,7 +101,7 @@ def convert(photo_path, video_path, output_path):
 
 def matching_video(photo_path):
     base = os.path.splitext(photo_path)[0]
-    logging.info("Looking for videos named: {}".format(base))
+    logging.info(f"Looking for videos named: {base}")
     if os.path.exists(base + ".mov"):
         return base + ".mov"
     if os.path.exists(base + ".mp4"):
@@ -123,7 +123,7 @@ def process_directory(file_dir, recurse):
     :param recurse: if true, subdirectories will recursively be processes
     :return: a list of tuples containing matched photo/video pairs.
     """
-    logging.info("Processing dir: {}".format(file_dir))
+    logging.info(f"Processing dir: {file_dir}")
     if recurse:
         logging.error("Recursive traversal is not implemented yet.")
         exit(1)
@@ -135,8 +135,8 @@ def process_directory(file_dir, recurse):
                 file_fullpath) != "":
             file_pairs.append((file_fullpath, matching_video(file_fullpath)))
 
-    logging.info("Found {} pairs.".format(len(file_pairs)))
-    logging.info("subset of found image/video pairs: {}".format(str(file_pairs[0:9])))
+    logging.info(f"Found {len(file_pairs)} pairs.")
+    logging.info(f"subset of found image/video pairs: {str(file_pairs[0:9])}")
     return file_pairs
 
 
@@ -162,7 +162,7 @@ def main(args):
             all_files = set(os.path.join(args.dir, file) for file in os.listdir(args.dir))
             remaining_files = all_files - procesed_files
 
-            logging.info("Found {} remaining files that will copied.".format(len(remaining_files)))
+            logging.info(f"Found {len(remaining_files)} remaining files that will copied.")
 
             if len(remaining_files) > 0:
                 # Ensure the destination directory exists
@@ -199,3 +199,4 @@ if __name__ == '__main__':
     parser.add_argument('--copyall', help='Copy unpaired files to directory.', action='store_true')
 
     main(parser.parse_args())
+s
